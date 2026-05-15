@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/geoanalyze", "destination": "/api/geoanalyze" },
+    { "source": "/api/healthz", "destination": "/api/healthz" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
