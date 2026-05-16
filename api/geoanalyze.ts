@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const SYSTEM_PROMPT = `Act as an expert OSINT Geolocation specialist. Your goal is to pinpoint the exact coordinates of an image by analyzing subtle environmental clues. Follow this step-by-step logic:
 
@@ -63,37 +63,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  let mimeType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" = "image/jpeg";
+  let mimeType = "image/jpeg";
   if (imageBase64.startsWith("iVBOR")) mimeType = "image/png";
   else if (imageBase64.startsWith("R0lGO")) mimeType = "image/gif";
   else if (imageBase64.startsWith("UklGR")) mimeType = "image/webp";
 
-  const modelName = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+  const modelName = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 
-  const genai = new GoogleGenerativeAI(apiKey);
-  const model = genai.getGenerativeModel({
-    model: modelName,
-    systemInstruction: SYSTEM_PROMPT,
-  });
+  const ai = new GoogleGenAI({ apiKey });
 
-  let result;
+  let response;
   try {
-    result = await model.generateContent([
-      {
-        inlineData: {
-          data: imageBase64,
-          mimeType,
+    response = await ai.models.generateContent({
+      model: modelName,
+      contents: [
+        {
+          parts: [
+            { inlineData: { data: imageBase64, mimeType } },
+            {
+              text: "Analyze this image and determine its geographic location following the 4-step OSINT reasoning process.",
+            },
+          ],
         },
+      ],
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        maxOutputTokens: 4096,
       },
-      "Analyze this image and determine its geographic location following the 4-step OSINT reasoning process.",
-    ]);
+    });
   } catch (aiErr) {
     const message = aiErr instanceof Error ? aiErr.message : "AI service error";
     res.status(502).json({ error: `AI analysis failed: ${message}` });
     return;
   }
 
-  const content = result.response.text();
+  const content = response.text ?? "";
 
   const lastOpen = content.lastIndexOf("{");
   const lastClose = content.lastIndexOf("}");
