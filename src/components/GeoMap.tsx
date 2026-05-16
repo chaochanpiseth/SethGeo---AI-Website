@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+// 1. Move the CSS import to the top of the file
+import "leaflet/dist/leaflet.css"; 
 
 interface GeoMapProps {
   lat: number;
@@ -16,7 +18,8 @@ export function GeoMap({ lat, lng, locationLabel }: GeoMapProps) {
 
     const initMap = async () => {
       const L = (await import("leaflet")).default;
-      await import("leaflet/dist/leaflet.css");
+      // 2. Remove the dynamic 'await import("leaflet/dist/leaflet.css")' from here
+      
       if (!isMounted || !mapRef.current) return;
 
       if (mapInstanceRef.current) {
