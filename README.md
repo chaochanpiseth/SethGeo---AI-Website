@@ -3,59 +3,51 @@
 **Developer:** Chao Chanpiseth
 
 AI-powered OSINT image geolocation using 4-step visual reasoning.
+Powered by **Google Gemini** — FREE, no credit card required.
 
 ---
 
 ## Quick Deploy to Vercel
 
-### Step 1 — Install dependencies
-```bash
-npm install
-```
+### Step 1 — Get a FREE Gemini API key (no billing, no credit card)
 
-### Step 2 — Set up environment variables
+1. Go to https://aistudio.google.com/app/apikey
+2. Sign in with your Google account
+3. Click **Create API Key**
+4. Copy the key
 
-Copy `.env.example` to `.env.local`:
-```bash
-cp .env.example .env.local
-```
+**Free tier limits:** 1,500 requests/day — more than enough for personal use.
 
-Edit `.env.local` and add your OpenAI API key:
-```
-OPENAI_API_KEY=sk-your-key-here
-```
+### Step 2 — Deploy to Vercel
 
-Get an API key at: https://platform.openai.com/api-keys
+**Option A — Vercel Dashboard (easiest):**
+1. Go to https://vercel.com/new
+2. Upload or import this folder
+3. In **Environment Variables**, add:
+   - Name: `GEMINI_API_KEY`
+   - Value: `your key from Step 1`
+4. Click **Deploy**
 
-### Step 3 — Deploy
-
-**Option A — Vercel CLI (recommended):**
+**Option B — Vercel CLI:**
 ```bash
 npm install -g vercel
 vercel deploy
+vercel env add GEMINI_API_KEY
+vercel --prod
 ```
-
-When prompted:
-- Set `OPENAI_API_KEY` as an environment variable in the Vercel dashboard
-- Or run: `vercel env add OPENAI_API_KEY`
-
-**Option B — Vercel Dashboard:**
-1. Go to https://vercel.com/new
-2. Import this folder as a new project
-3. Add `OPENAI_API_KEY` in the Environment Variables section
-4. Click Deploy
 
 ---
 
 ## Local Development
+
 ```bash
 npm install
+cp .env.example .env.local
+# Edit .env.local and add your GEMINI_API_KEY
 npm run dev
 ```
 
-The app runs at `http://localhost:5173`
-
-For local API testing, create `.env.local` with your `OPENAI_API_KEY`.
+App runs at `http://localhost:5173`
 
 ---
 
@@ -63,7 +55,7 @@ For local API testing, create `.env.local` with your `OPENAI_API_KEY`.
 
 ```
 ├── api/
-│   ├── geoanalyze.ts   — POST /api/geoanalyze (Vercel serverless function)
+│   ├── geoanalyze.ts   — POST /api/geoanalyze (Vercel serverless, uses Gemini)
 │   └── healthz.ts      — GET  /api/healthz
 ├── src/
 │   ├── components/     — UI components
@@ -74,9 +66,12 @@ For local API testing, create `.env.local` with your `OPENAI_API_KEY`.
 └── vite.config.ts      — Vite build config
 ```
 
-## Optional: Change Model
+## Models Available (all free)
 
-Add to your Vercel environment variables:
-```
-OPENAI_MODEL=gpt-4o
-```
+| Model | Speed | Quality |
+|-------|-------|---------|
+| `gemini-1.5-flash` | Fast | Great (default) |
+| `gemini-1.5-flash-8b` | Fastest | Good |
+| `gemini-2.0-flash` | Fast | Best |
+
+Set `GEMINI_MODEL` env var to switch models.
