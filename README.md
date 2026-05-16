@@ -3,7 +3,7 @@
 **Developer:** Chao Chanpiseth
 
 AI-powered OSINT image geolocation using 4-step visual reasoning.
-Powered by **Google Gemini** — FREE, no credit card required.
+Powered by **Google Gemini 2.0 Flash** — FREE, no credit card required.
 
 ---
 
@@ -70,8 +70,8 @@ App runs at `http://localhost:5173`
 
 | Model | Speed | Quality |
 |-------|-------|---------|
-| `gemini-1.5-flash` | Fast | Great (default) |
-| `gemini-1.5-flash-8b` | Fastest | Good |
-| `gemini-2.0-flash` | Fast | Best |
+| `gemini-2.0-flash` | Fast | Best (default) |
+| `gemini-2.0-flash-lite` | Fastest | Good |
+| `gemini-1.5-pro` | Slower | High accuracy |
 
 Set `GEMINI_MODEL` env var to switch models.
