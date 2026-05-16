@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const SYSTEM_PROMPT = `Act as an expert OSINT Geolocation specialist. Your goal is to pinpoint the exact coordinates of an image by analyzing subtle environmental clues. Follow this step-by-step logic:
 
@@ -49,9 +49,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: "OPENAI_API_KEY is not configured" });
+    res.status(500).json({
+      error: "GEMINI_API_KEY is not configured. Get a free key at https://aistudio.google.com/app/apikey",
+    });
     return;
   }
 
@@ -61,47 +63,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const openai = new OpenAI({ apiKey });
-
   let mimeType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" = "image/jpeg";
   if (imageBase64.startsWith("iVBOR")) mimeType = "image/png";
   else if (imageBase64.startsWith("R0lGO")) mimeType = "image/gif";
   else if (imageBase64.startsWith("UklGR")) mimeType = "image/webp";
 
-  const model = process.env.OPENAI_MODEL ?? "gpt-4o";
+  const modelName = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
 
-  let completion;
+  const genai = new GoogleGenerativeAI(apiKey);
+  const model = genai.getGenerativeModel({
+    model: modelName,
+    systemInstruction: SYSTEM_PROMPT,
+  });
+
+  let result;
   try {
-    completion = await openai.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: [
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${mimeType};base64,${imageBase64}`,
-                detail: "high",
-              },
-            },
-            {
-              type: "text",
-              text: "Analyze this image and determine its geographic location following the 4-step OSINT reasoning process.",
-            },
-          ],
+    result = await model.generateContent([
+      {
+        inlineData: {
+          data: imageBase64,
+          mimeType,
         },
-      ],
-      max_tokens: 4096,
-    });
+      },
+      "Analyze this image and determine its geographic location following the 4-step OSINT reasoning process.",
+    ]);
   } catch (aiErr) {
     const message = aiErr instanceof Error ? aiErr.message : "AI service error";
     res.status(502).json({ error: `AI analysis failed: ${message}` });
     return;
   }
 
-  const content = completion.choices[0]?.message?.content ?? "";
+  const content = result.response.text();
+
   const lastOpen = content.lastIndexOf("{");
   const lastClose = content.lastIndexOf("}");
 
